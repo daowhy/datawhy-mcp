@@ -32,7 +32,10 @@
 ## 本仓库内容
 
 - `mcp-datawhy/`——stdio 本地型 MCP server（Node＋Python 双后端·零 npm 依赖）与远程型 `remote/server.js`
-- skill 包（datawhy_info）：见 [datawhy.cn agent-access](https://www.datawhy.cn/#/agent-access) 下载页
+- skill 包（datawhy_info r2·sha256 `b6f84c7aacdd79669dcbdef0ce4c8781422add0d4d5d03ec27ac5abf4ca87a82`）：
+  - [Release 下载](https://github.com/daowhy/datawhy-mcp/releases/download/skill-r2/datawhy-info-skill-r2.tar.gz)
+  - [仓内直取](./skill/datawhy-info-skill-r2.tar.gz)
+  - 安装指引：[datawhy.cn agent-access](https://www.datawhy.cn/#/agent-access)
 
 ## 数据与口径
 
