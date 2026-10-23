@@ -36,7 +36,7 @@
   - [Release 下载](https://github.com/daowhy/datawhy-mcp/releases/download/skill-r2/datawhy-info-skill-r2.tar.gz)
   - [仓内直取](./skill/datawhy-info-skill-r2.tar.gz)
   - 安装指引：[datawhy.cn agent-access](https://www.datawhy.cn/#/agent-access)
-  - - `qsh`——A 股行情速查命令行（[daowhy/qsh](https://github.com/daowhy/qsh)）：零依赖单文件，配好 Key 后 `node qsh.mjs 600519.SH` 一条命令查收盘。
+  - `qsh`——A 股行情速查命令行（[daowhy/qsh](https://github.com/daowhy/qsh)）：零依赖单文件，配好 Key 后 `node qsh.mjs 600519.SH` 一条命令查收盘。
 
 ## 数据与口径
 
