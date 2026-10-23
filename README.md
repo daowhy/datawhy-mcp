@@ -4,7 +4,7 @@
 
 ## 快速接入（远程·推荐）
 
-- 端点（Streamable HTTP）：`https://info.timelibrary.net/mcp-server/mcp`
+- 端点（Streamable HTTP）：`https://datawhy.cn/mcp-server/mcp`
 - 鉴权：请求头 `X-API-Key`（于 [datawhy.cn](https://datawhy.cn) 注册后，个人中心创建）
 
 ```json
@@ -12,7 +12,7 @@
   "mcpServers": {
     "datawhy": {
       "type": "http",
-      "url": "https://info.timelibrary.net/mcp-server/mcp",
+      "url": "https://datawhy.cn/mcp-server/mcp",
       "headers": { "X-API-Key": "你的密钥" }
     }
   }
