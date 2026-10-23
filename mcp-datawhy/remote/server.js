@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // datawhy-mcp-remote · SSE/Streamable HTTP 远程型 MCP server（工部 · 奉谕直办 2026-10-22）
 // 形态：零依赖 Node http；Streamable HTTP 传输（POST /mcp·JSON-RPC 2.0）；密钥＝客户端 X-API-Key 透传门户网关
-// 部署：docker node:24-alpine · 127.0.0.1:18090 · nginx 挂 info.timelibrary.net/mcp-server/
+// 部署：docker node:24-alpine · 127.0.0.1:18090 · nginx 挂 datawhy.cn/mcp-server/（info 旧域并存）
 // 鉴权与额度：网关侧执掌（每用户自有 Key·日额度账号共享）——本服务无状态不留密钥
 'use strict';
 const http = require('http');
@@ -15,7 +15,7 @@ const SERVER_INFO = { name: 'datawhy-mcp-remote', version: '1.0.0' };
 const TOOLS = [
   {
     name: 'query_daily',
-    description: '查询 A 股指数/ETF/个股日线行情（开高低收、涨跌幅、成交量额、换手率）。代码带交易所后缀，如 000001.SH 上证指数、399006.SZ 创业板指、510300.SH 沪深300ETF、600519.SH 贵州茅台。返回按日期倒序（最新在前）。',
+    description: '查询 A 股指数/ETF/个股日线行情（开高低收、涨跌幅、成交量额、换手率）。代码带交易所后缀，如 000001.SH 上证指数、399006.SZ 创业板指、510300.SH 沪深300ETF、600519.SH 贵州茅台。按代码段自动路由数据集（指数/ETF/个股分库），返回按日期倒序（最新在前）。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -130,13 +130,36 @@ function fillPct(rows) {
 }
 
 // ── 工具执行──────────────────────────────────────────────
+// query_daily 分库路由（PM→GB-20261024-001 勘报修讫 2026-10-24）：网关指数/ETF/个股分库，
+// 按交易所代码段判库——SH：51/56/58→ETF·6→个股·余（000/880/950 等）→指数；
+// SZ：15/16/18→ETF·39（399xxx）→指数·余→个股；BJ：89（899050 北证50）→指数·余→个股。
+function routeDailyDataset(sym) {
+  const i = sym.indexOf('.');
+  const code = sym.slice(0, i), ex = sym.slice(i + 1);
+  if (ex === 'SH') {
+    if (/^(51|56|58)/.test(code)) return 'trade_etf_daily';
+    if (/^6/.test(code)) return 'stock_daily';
+    return 'trade_index_daily';
+  }
+  if (ex === 'SZ') {
+    if (/^(15|16|18)/.test(code)) return 'trade_etf_daily';
+    if (/^39/.test(code)) return 'trade_index_daily';
+    return 'stock_daily';
+  }
+  if (ex === 'BJ') {
+    if (/^89/.test(code)) return 'trade_index_daily';
+    return 'stock_daily';
+  }
+  return 'stock_daily';
+}
 async function exec(name, args, apiKey) {
   const a = validate(name, args);
   if (name === 'query_daily') {
+    const dataset = routeDailyDataset(a.symbol);
     const p = { symbol: a.symbol, page_size: Math.min(a.limit || 60, 500) };
     if (a.start_date) p.start_date = a.start_date;
     if (a.end_date) p.end_date = a.end_date;
-    const j = await gateway('stock_daily', p, apiKey);
+    const j = await gateway(dataset, p, apiKey);
     const rows = fillPct(normalize(rowsOf(j), MAP_DAILY));
     return { tool: 'query_daily', symbol: a.symbol, count: rows.length, rows, meta: j.meta || null, source: 'datawhy 门户' };
   }
