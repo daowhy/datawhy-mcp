@@ -1,5 +1,7 @@
 # Datawhy MCP · 小智问数
 
+
+> 小智问数——行情数据，问我就好（[datawhy.cn](https://datawhy.cn)）
 > A 股行情数据的 MCP（Model Context Protocol）接入——把「小智问数」（datawhy.cn）装进你的 AI。
 
 ## 快速接入（远程·推荐）
