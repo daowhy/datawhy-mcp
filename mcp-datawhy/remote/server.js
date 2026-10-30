@@ -10,16 +10,16 @@ const https = require('https');
 const PORT = parseInt(process.env.PORT || '18090', 10);
 const GATEWAY = process.env.GATEWAY || 'https://info.timelibrary.net/api/v1';
 const DEFAULT_PROTOCOL = '2025-06-18';
-const SERVER_INFO = { name: 'datawhy-mcp-remote', version: '1.0.0' };
+const SERVER_INFO = { name: 'datawhy-mcp-remote', version: '1.1.0' };
 
 const TOOLS = [
   {
     name: 'query_daily',
-    description: '查询 A 股指数/ETF/个股日线行情（开高低收、涨跌幅、成交量额、换手率）。代码带交易所后缀，如 000001.SH 上证指数、399006.SZ 创业板指、510300.SH 沪深300ETF、600519.SH 贵州茅台。按代码段自动路由数据集（指数/ETF/个股分库），返回按日期倒序（最新在前）。',
+    description: '查询 A 股指数/ETF/个股日线行情（开高低收、涨跌幅、成交量额、换手率）。代码带交易所后缀，如 000001.SH 上证指数、399006.SZ 创业板指、510300.SH 沪深300ETF、600519.SH 贵州茅台。按代码段自动路由数据集（指数/ETF/个股分库），返回按日期倒序（最新在前）。板块热度榜传 SECTOR.HEAT（行业板块三时点涨跌幅与领涨领跌股·竞价定格 09:26／盘中 14:30／收盘 15:35）。',
     inputSchema: {
       type: 'object',
       properties: {
-        symbol: { type: 'string', description: '标的代码，6 位数字.两位后缀大写' },
+        symbol: { type: 'string', description: '标的代码，6 位数字.两位后缀大写；板块热度榜传 SECTOR.HEAT' },
         start_date: { type: 'string', description: '起始日期 YYYY-MM-DD（缺省＝不限）' },
         end_date: { type: 'string', description: '截止日期 YYYY-MM-DD（缺省＝今日）' },
         limit: { type: 'integer', description: '返回条数上限 1-500（缺省 60）' }
@@ -66,7 +66,7 @@ function validate(name, a) {
   const out = {};
   if (name === 'query_daily') {
     const sym = String(a.symbol || '').toUpperCase().trim();
-    if (!RE_SYMBOL.test(sym)) throw new Error(`symbol 格式应为 6 位数字.两位交易所后缀（收到：${a.symbol}）`);
+    if (sym !== 'SECTOR.HEAT' && !RE_SYMBOL.test(sym)) throw new Error(`symbol 格式应为 6 位数字.两位交易所后缀（收到：${a.symbol}）`);
     out.symbol = sym;
     if (a.start_date != null) { out.start_date = normDate(a.start_date); if (!out.start_date) throw new Error('start_date 应为 YYYY-MM-DD'); }
     if (a.end_date != null) { out.end_date = normDate(a.end_date); if (!out.end_date) throw new Error('end_date 应为 YYYY-MM-DD'); }
@@ -134,6 +134,7 @@ function fillPct(rows) {
 // 按交易所代码段判库——SH：51/56/58→ETF·6→个股·余（000/880/950 等）→指数；
 // SZ：15/16/18→ETF·39（399xxx）→指数·余→个股；BJ：89（899050 北证50）→指数·余→个股。
 function routeDailyDataset(sym) {
+  if (sym === 'SECTOR.HEAT') return 'sector_heat';
   const i = sym.indexOf('.');
   const code = sym.slice(0, i), ex = sym.slice(i + 1);
   if (ex === 'SH') {
@@ -156,7 +157,7 @@ async function exec(name, args, apiKey) {
   const a = validate(name, args);
   if (name === 'query_daily') {
     const dataset = routeDailyDataset(a.symbol);
-    const p = { symbol: a.symbol, page_size: Math.min(a.limit || 60, 500) };
+    const p = dataset === 'sector_heat' ? { page_size: Math.min(a.limit || 60, 500) } : { symbol: a.symbol, page_size: Math.min(a.limit || 60, 500) };
     if (a.start_date) p.start_date = a.start_date;
     if (a.end_date) p.end_date = a.end_date;
     const j = await gateway(dataset, p, apiKey);
